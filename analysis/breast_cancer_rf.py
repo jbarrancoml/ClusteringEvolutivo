@@ -109,7 +109,7 @@ def main():
 
     t_start = time.perf_counter()
 
-    result, labels = evo_clustering(false_positives_values, pop_size=50, max_clusters=3, max_iter=200, show_times=False, show_graphs=True)
+    result, labels = evo_clustering(false_positives_values, pop_size=50, max_clusters=5, max_iter=50, show_times=True, show_graphs=False)
 
     t_end = time.perf_counter()
     total_time = t_end - t_start

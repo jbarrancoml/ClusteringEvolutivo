@@ -231,3 +231,13 @@ class Solution:
                 points[k] = index
             index = index + 1
         return np.array(points)
+
+    def get_medoid_indexes(self):
+        #Select a random slice of the numner max_clusters indexes of the medoids (the ones with 1 in the genotype)
+        medoid_indexes = []
+        for i in range(0, self.genotype_length):
+            if self.genotype[i] == 1:
+                medoid_indexes.append(i)
+        assert medoid_indexes != [] and isinstance(medoid_indexes, list)
+        return medoid_indexes
+

@@ -215,19 +215,16 @@ def evo_clustering(dataset, pop_size=250, min_clusters=2, max_clusters=5, max_it
         mean_fitness_each_epoch.append(mean_fitness)
         epochs.append(iter)
 
-    # clusters, centroids = get_clusters(best_solution,max_clusters), get_centroids(best_solution, max_clusters)
-    print('Best fitness achieved:', best_fitness)
-
     sbest_phenotype = best_solution.solution_to_eval(dataset)
-    print('Best phenotype:', sbest_phenotype)
-    print('Best phenotype length:', len(sbest_phenotype))
-
-    print('Best solution:', best_solution.get_point_indexes(dataset))
 
     if show_graphs:
         plot_clusters(sbest_phenotype)
         plot_best_fitness_graph(best_fitness_each_epoch, epochs)
         plot_mean_fitness_graph(mean_fitness_each_epoch, epochs)
+
+    if show_info:
+        print('Best fitness achieved:', best_fitness)
+        print('Best solution:', best_solution.get_point_indexes(dataset))
 
     return best_fitness, best_solution.get_point_indexes(dataset)
     # return clusters, centroids
