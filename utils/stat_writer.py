@@ -7,19 +7,21 @@ class StatWriter:
     def __init__(self, filename):
         self.filename = filename
         self.file = open(self.filename + '.csv', "w")
+
         self.header = None
         self.header_types = list()
         self.rows = list()
+        self.statistic_rows = list()
+
         self.writer = csv.writer(self.file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         self.func = {
             'sum': '=SUMA({})',
-            'average': '=MEDIA({})',
+            'average': '=PROMEDIO({})',
             'max': '=MAX({})',
             'min': '=MIN({})',
             'count': '=CONTAR({})',
             'std': '=DESVIACION({})',
         }
-
 
     def write_header(self, header):
         self.write(header)
@@ -32,7 +34,13 @@ class StatWriter:
         self.header_types.append(column_type)
 
     def add_header(self, header, header_types):
+        assert isinstance(header, list), 'header is not a list'
+        assert isinstance(header_types, list), 'header_types is not a list'
+
         for i in range(0, len(header)):
+            assert isinstance(header[i], str), 'header[{}] is not a string'.format(i)
+            assert isinstance(header_types[i], type), 'header_types[{}] is not a type'.format(i)
+
             self.add_column(header[i], header_types[i])
 
     def add_row(self, row):
@@ -49,6 +57,25 @@ class StatWriter:
                 assert False, 'in column {}. Row types are not equal to header types: column type is {} instead of {}'.format(self.header[i], str(self.header_types[i].__name__), str(type(row[i]).__name__))
         return True
 
+    def add_single_column(self, column_name, column_values, column_type, function_cell=None):
+        assert isinstance(column_name, str), 'column_name is not a string'
+        assert isinstance(column_values, list), 'column_values is not a list'
+        assert isinstance(column_type, type), 'column_type is not a type'
+        assert len(column_values) == len(self.rows), 'column_values length is not equal to rows length'
+
+        if self.header is None:
+            self.header = list()
+        self.header.append(column_name)
+        self.header_types.append(column_type)
+
+        for i in range(0, len(self.rows)):
+            assert column_values[i] is None or isinstance(column_values[i], column_type), 'column_values type is not equal to column_type'
+            self.rows[i].append(column_values[i])
+
+        if function_cell is not None:
+            assert isinstance(function_cell, str), 'function_cell is not a string'
+            self.statistic_rows.append([function_cell])
+
     def delete_row(self, row_index):
         assert isinstance(row_index, int), 'row_index is not an integer'
         self.rows.pop(row_index)
@@ -57,9 +84,9 @@ class StatWriter:
         assert isinstance(row, list), 'row is not a list'
         assert len(row) == len(self.header), 'row length is not equal to header length'
         assert self.header is not None, 'header is not defined, please add a column first'
-        print('ROW', row)
-        self.rows.append(row)
-        print('ROWS', self.rows)
+
+        self.statistic_rows.append(row)
+        print('ST', self.statistic_rows)
 
     def get_cell_index(self, column):
         assert isinstance(column, int), 'column is not an integer'
@@ -129,22 +156,48 @@ class StatWriter:
         self.writer.writerow(self.header)
         for row in self.rows:
             self.writer.writerow(row)
-        pass
+        for statictic_row in self.statistic_rows:
+            print('statictic_row', statictic_row)
+            self.writer.writerow(statictic_row)
 
     def generate_excel_file(self):
         assert self.header is not None, 'header is not defined, please add a column first'
         assert len(self.rows) > 0, 'rows is empty, please add a row first'
 
-        """table = pd.DataFrame(self.rows, columns=self.header)
+        """table = pd.DataFrame(self.rows + self.statistic_rows, columns=self.header)
+        print('Table:', table)
         table.to_excel(self.filename + ".xlsx", index=False)"""
 
         file = open(self.filename + '.csv')
-        csvreader = csv.reader(file)
-        header = next(csvreader)
 
         workbook = xlsxwriter.Workbook(self.filename + '.xlsx')
-        worksheet1 = workbook.add_worksheet('Male')
-        worksheet2 = workbook.add_worksheet('Female')
+        worksheet = workbook.add_worksheet('Statistics')
+
+        # Start from the first cell. Rows and columns are zero indexed.
+        row = 0
+        col = 0
+
+        # Iterate over the data and write it out row by row.
+        for item in self.header:
+            worksheet.write(row, col, item)
+            col += 1
+        col = 0
+        row += 1
+        for item in self.rows:
+            for i in item:
+                worksheet.write(row, col, i)
+                col += 1
+            col = 0
+            row += 1
+        col = 0
+        for item in self.statistic_rows:
+            for i in item:
+                worksheet.write(row, col, i)
+                col += 1
+            col = 0
+            row += 1
+
+        workbook.close()
 
         pass
 
@@ -171,12 +224,8 @@ if __name__ == '__main__':
     stat_writer.add_row(['row1', 1])
     stat_writer.add_row(['row2', 2])
     stat_writer.add_row(['Row3', 3])
-    function = stat_writer.add_function('sum', 2, 1, 3)
-    print('function', function)
+    function = stat_writer.add_function('average', 2, first_row=1, last_row=3)
     stat_writer.add_statistic_row(['', function])
     stat_writer.write_csv_file()
     stat_writer.generate_excel_file()
-    stat_writer.empty()
-    stat_writer.print()
-    stat_writer.read_csv_file()
     stat_writer.print()

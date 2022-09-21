@@ -2,4 +2,4 @@ column1,column2
 row1,1
 row2,2
 Row3,3
-,=SUMA(B2:B4)
+,=PROMEDIO(B2:B4)

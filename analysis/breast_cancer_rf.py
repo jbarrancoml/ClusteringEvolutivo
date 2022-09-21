@@ -106,25 +106,28 @@ def main():
     from src.algorithm import evo_clustering
     from utils.stat_writer import StatWriter
 
+    seeds = list(range(0, 30))
+
     Conf_evo = {
-        'pop_size': [20, 50, 100],
-        'max_clusters': [2, 3, 5],
-        'max_iterations': [20, 50, 100],
+        'ps': [20, 50, 100],
+        'mc': [2, 3, 5],
+        'mi': [20, 50, 100],
     }
 
     writer = StatWriter('../results/breast_cancer_rf_bin_EVO')
 
-    writer.add_header(['Silhouette (max)', 'Num Clusters', 'Time'], [str, int, float])
+    writer.add_header(['Configuration', 'Silhouette (max)', 'Num Clusters', 'Time'], [str, float, int, float])
 
-    for pop_size in Conf_evo['pop_size']:
-        for max_clusters in Conf_evo['max_clusters']:
-            for max_iterations in Conf_evo['max_iterations']:
+    for pop_size in Conf_evo['ps']:
+        for max_clusters in Conf_evo['mc']:
+            for max_iterations in Conf_evo['mi']:
                 start_time = time.time()
                 print("Evo Clustering with pop_size: {}, max_clusters: {}, max_iterations: {}".format(pop_size, max_clusters, max_iterations))
                 sil_evo, n_clusters = evo_clustering(dataset=false_positives_values, max_clusters=max_clusters,
                                                      pop_size=pop_size, max_iter=max_iterations)
                 elapsed_time = time.time() - start_time
-                writer.add_row([sil_evo, n_clusters, elapsed_time])
+                writer.add_row(['ps'+str(pop_size)+'mc'+str(max_clusters)+'mi'+str(max_iterations),
+                                sil_evo, n_clusters, elapsed_time])
     writer.write_csv_file()
     writer.generate_excel_file()
     writer.close()
@@ -139,7 +142,7 @@ def main():
 
     writer = StatWriter('../results/breast_cancer_rf_bin_AF')
 
-    writer.add_header(['Silhouette (max)', 'Num Clusters', 'Time'], [float, int, float])
+    writer.add_header(['Cofiguration', 'Silhouette (max)', 'Num Clusters', 'Time'], [str, float, int, float])
 
     # Affinity Propagation
 
@@ -157,7 +160,8 @@ def main():
                     sil_af = silhouette_score(false_positives_values, labels, metric='euclidean')
                 else:
                     sil_af = -1.0
-                writer.add_row([sil_af, n_clusters_, elapsed_time])
+                writer.add_row(['d'+str(d)+'m'+str(m)+'c'+str(c),
+                                sil_af, n_clusters_, elapsed_time])
 
     writer.write_csv_file()
     writer.generate_excel_file()
