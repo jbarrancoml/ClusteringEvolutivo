@@ -74,5 +74,4 @@ class PopulationCreator:
                 if genotype[rnd_index] == 0:
                     genotype[rnd_index] = 1
                     assign_cluster = False
-        print('Relleno:', genotype)
         return genotype

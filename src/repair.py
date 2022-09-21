@@ -65,17 +65,12 @@ class RepairOperator:
 
         repaired_genotype = [0]*len(genotype)
         posible_indexes = list(range(0, len(genotype)-1))
-        print('Reparing...#######################################################')
-        print('Pre:', type(genotype))
-        print('Len:', len(genotype))
 
         for i in range(min_clusters):
             random_index = self.rnd.choice(posible_indexes)
-            print('Random_index:', random_index)
             repaired_genotype[random_index] = 1
             posible_indexes.remove(random_index)
 
-        print('Post:', repaired_genotype)
         repaired_genotype = np.array(repaired_genotype)
 
         assert isinstance(repaired_genotype, numpy.ndarray), 'repaired_genotype is not an numpy.ndarray'

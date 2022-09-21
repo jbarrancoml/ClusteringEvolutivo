@@ -178,7 +178,7 @@ class Solution:
             if self.genotype[i] == 1:
                 clusters.append([i])
         # 2 - Calcular la distancia de cada punto hacia los medoides y decidir a que cluster pertenece
-        print('################', self.genotype)
+
         for i in range(0, self.genotype_length):
             if self.genotype[i] == 0:
                 # Calculate the distance from the point to the medoids

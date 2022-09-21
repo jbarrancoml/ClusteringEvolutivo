@@ -48,9 +48,6 @@ def main():
     # Spliting arrays or matrices into random train and test subsets
     from sklearn.model_selection import train_test_split
 
-    #print head
-    print(df.columns)
-
     X = df.drop('class', axis=1)
     y = df['class']
 
@@ -62,7 +59,8 @@ def main():
     # creating dataframe of IRIS dataset
 
     # creating a RF classifier
-    clf = RandomForestClassifier(n_estimators=100)
+    clf = RandomForestClassifier(n_estimators=100, random_state=0, min_samples_split=2,
+                                 min_samples_leaf=1, max_features='auto')
 
     # Training the model on the training dataset
     # fit function is used to train the model using the training sets as parameters
@@ -106,41 +104,65 @@ def main():
 
     import time
     from src.algorithm import evo_clustering
+    from utils.stat_writer import StatWriter
 
-    t_start = time.perf_counter()
+    Conf_evo = {
+        'pop_size': [20, 50, 100],
+        'max_clusters': [2, 3, 5],
+        'max_iterations': [20, 50, 100],
+    }
 
-    result, labels = evo_clustering(false_positives_values, pop_size=50, max_clusters=5, max_iter=50, show_times=True, show_graphs=False)
+    writer = StatWriter('../results/breast_cancer_rf_bin_EVO')
 
-    t_end = time.perf_counter()
-    total_time = t_end - t_start
+    writer.add_header(['Silhouette (max)', 'Num Clusters', 'Time'], [str, int, float])
 
-    print('Time evoclustering:', total_time)
-    print('My silhouette score:', result)
-
-    result = silhouette_score(X=false_positives_values, labels=labels, metric='euclidean')
-    print('Sklearn silhouette score:', result)
-
+    for pop_size in Conf_evo['pop_size']:
+        for max_clusters in Conf_evo['max_clusters']:
+            for max_iterations in Conf_evo['max_iterations']:
+                start_time = time.time()
+                print("Evo Clustering with pop_size: {}, max_clusters: {}, max_iterations: {}".format(pop_size, max_clusters, max_iterations))
+                sil_evo, n_clusters = evo_clustering(dataset=false_positives_values, max_clusters=max_clusters,
+                                                     pop_size=pop_size, max_iter=max_iterations)
+                elapsed_time = time.time() - start_time
+                writer.add_row([sil_evo, n_clusters, elapsed_time])
+    writer.write_csv_file()
+    writer.generate_excel_file()
+    writer.close()
 
     #################################
-    t_start = time.perf_counter()
 
-    alg = AffinityPropagation(random_state=0, damping=0.7, max_iter=200, convergence_iter=30)
-    alg.fit(false_positives_values)
-    centroids = alg.cluster_centers_indices_
-    num_clusters = len(centroids)
-    if len(centroids) == 0:
-        clusters, exemplars = None, None
-    else:
-        clusters = create_clusters_from_labels(alg.labels_, num_clusters)
-        exemplars = centroids.tolist()
+    Conf_affinity = {
+        'd': [0.5, 0.7, 0.9],
+        'm': [100, 200, 500],
+        'c': [5, 15, 30]
+    }
 
-    t_end = time.perf_counter()
-    total_time = t_end - t_start
-    print('Alg labels:', type(alg.labels_))
-    result = silhouette_score(X=false_positives_values, labels=alg.labels_, metric='euclidean')
+    writer = StatWriter('../results/breast_cancer_rf_bin_AF')
 
-    print('Time affinity propagation:', total_time)
-    print('Silhouette score:', result)
+    writer.add_header(['Silhouette (max)', 'Num Clusters', 'Time'], [float, int, float])
+
+    # Affinity Propagation
+
+    for d in Conf_affinity['d']:
+        for m in Conf_affinity['m']:
+            for c in Conf_affinity['c']:
+                start_time = time.time()
+                print("Affinity Propagation with d: {}, m: {}, c: {}".format(d, m, c))
+                af = AffinityPropagation(damping=d, max_iter=m, convergence_iter=c, random_state=0).fit(false_positives_values)
+                elapsed_time = time.time() - start_time
+                cluster_centers_indices = af.cluster_centers_indices_
+                labels = af.labels_
+                n_clusters_ = len(cluster_centers_indices)
+                if n_clusters_ > 1:
+                    sil_af = silhouette_score(false_positives_values, labels, metric='euclidean')
+                else:
+                    sil_af = -1.0
+                writer.add_row([sil_af, n_clusters_, elapsed_time])
+
+    writer.write_csv_file()
+    writer.generate_excel_file()
+    writer.close()
+
     ##################################
 
 

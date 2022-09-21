@@ -127,14 +127,15 @@ def plot_mean_fitness_graph(mean_fitness_array, epochs):
     fig.show()
 
 
-def evo_clustering(dataset, pop_size=250, min_clusters=2, max_clusters=5, max_iter=100, show_times=False, show_graphs=False):
+def evo_clustering(dataset, pop_size=250, max_clusters=5,
+                   max_iter=100, show_times=False, show_graphs=False,
+                   show_info=False, random_seed=0):
     rnd = Random()
-    rnd.seed(0)
+    rnd.seed(random_seed)
     num_samples = len(dataset)
     distance_matrix = compute_distance_matrix(dataset, num_samples)
     creator = PopulationCreator(pop_size, num_samples, max_clusters, distance_matrix, rnd)
     population = creator.create_population()
-    print('Distance matrix:', distance_matrix)
     # print('Population')
     # print(population.print_population())
 
@@ -157,12 +158,10 @@ def evo_clustering(dataset, pop_size=250, min_clusters=2, max_clusters=5, max_it
         for s in population.get_solutions():
             labels = s.get_point_indexes(dataset)
             n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-            print('n_clusters:', n_clusters)
             if n_clusters != 1:
                 fitness = silhouette_sklearn(dataset, labels)
             else:
                 fitness = -1
-            print(fitness)
             fitness_sum += fitness
             s.set_fitness(fitness)
             if best_fitness < fitness:
@@ -226,5 +225,5 @@ def evo_clustering(dataset, pop_size=250, min_clusters=2, max_clusters=5, max_it
         print('Best fitness achieved:', best_fitness)
         print('Best solution:', best_solution.get_point_indexes(dataset))
 
-    return best_fitness, best_solution.get_point_indexes(dataset)
+    return best_fitness, best_solution.get_number_clusters()
     # return clusters, centroids
